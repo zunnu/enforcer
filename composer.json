@@ -1,0 +1,21 @@
+{
+    "name": "zunnu/enforcer",
+    "description": "Enforcer is a simple lightweight acl plugin for CakePHP",
+    "type": "cakephp-plugin",
+    "keywords": ["cakephp", "acl", "lightweight"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Juhani Aronen",
+            "email": "juhaniaronen@gmail.com"
+        }
+    ],
+    "require": {
+        "cakephp/cakephp": "^3.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "Enforcer\\": "src/"
+        }
+    },
+}

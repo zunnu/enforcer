@@ -1,0 +1,53 @@
+/* GENERAL */
+html {
+    position: relative;
+    min-height: 100%;
+}
+
+body {
+    font-size: 16px;
+    background-color: #ffffff !important;
+    min-width: 100% !important;
+    /*margin-bottom: 200px;*/
+}
+
+html, body {
+    width:100%;
+    /*overflow: hidden;*/
+}
+
+a {
+    text-decoration: none;
+}
+
+/* GLOBAL */
+
+h1,h2,h3,h4,h5,h6 {
+    font-weight: bold;
+}
+
+h1 {
+    font-size: 3em;
+}
+
+h1,h2 {
+
+}
+
+h3 {
+    margin: 20px 0;
+}
+
+h4 {
+    font-size: 18px;
+}
+
+.switchToggle input[type=checkbox]{height: 0; width: 0; visibility: hidden; position: absolute; }
+.switchToggle label {cursor: pointer; text-indent: -9999px; width: 104px; max-width: 104px; height: 30px; background: #dc3545 !important; display: block; border-radius: 100px; position: relative; }
+.switchToggle label:after {content: ''; position: absolute; top: 2px; left: 2px; width: 26px; height: 26px; background: #fff; border-radius: 90px; transition: 0.3s; }
+.switchToggle input:checked + label, .switchToggle input:checked + input + label  {background: #28a745 !important; }
+.switchToggle input + label:before, .switchToggle input + input + label:before {content: 'Denied'; position: absolute; top: 5px; left: 35px; width: 58px; height: 26px; border-radius: 90px; transition: 0.3s; text-indent: 0; color: #fff; }
+.switchToggle input:checked + label:before, .switchToggle input:checked + input + label:before {content: 'Allowed'; position: absolute; top: 5px; left: 10px; width: 58px; height: 26px; border-radius: 90px; transition: 0.3s; text-indent: 0; color: #fff; }
+.switchToggle input:checked + label:after, .switchToggle input:checked + input + label:after {left: calc(100% - 2px); transform: translateX(-100%); }
+.switchToggle label:active:after {width: 60px; } 
+.toggle-switchArea { margin: 10px 0 10px 0; }
