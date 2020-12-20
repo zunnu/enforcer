@@ -148,7 +148,13 @@ class EnforcerComponent extends Component
 
     // returns true or false
     // if nothing is given will check the logged in user
+    // checks the is_admin values of the groups
     public function isAdmin($id = null) {
+    	$adminGroups = [1];
+    	$enforcerGroups = TableRegistry::get('EnforcerGroups');
+    	$adminGroupsQ = $enforcerGroups->find('all')->where(['is_admin' => 1])->toArray();
+    	$adminGroups = array_unique(array_merge($adminGroups, array_column($adminGroupsQ, 'id')));
+
     	if(empty($id)) {
     		$id = $this->Auth->user('id');
     	}
@@ -166,7 +172,7 @@ class EnforcerComponent extends Component
 
     	if(is_array($group) && in_array(1, $group)) {
     		return true;
-    	} elseif(!is_array($group) && $group == 1) {
+    	} elseif(!is_array($group) && in_array($group, $adminGroups)) {
     		return true;
     	}
 
