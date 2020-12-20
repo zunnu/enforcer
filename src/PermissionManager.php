@@ -298,9 +298,10 @@ class PermissionManager {
                             foreach ($permissions as $permission) {
                                 // add found permissions to array
                                 if($permission->action == $method) {
-                                    // $groupKey = array_keys($groups, $groups[$permission->group_id]);
-
-                                    $permissionsList[$plugin][$prefix][$controllerName . 'Controller.php'][$method][$groups[$permission->group_id]] = $permission->allowed;
+                                    // if the group is still found
+                                    if(!empty($groups[$permission->group_id])) {
+                                        $permissionsList[$plugin][$prefix][$controllerName . 'Controller.php'][$method][$groups[$permission->group_id]] = $permission->allowed;
+                                    }
                                 }
                             }
                         }
