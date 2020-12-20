@@ -8,6 +8,7 @@ use DebugKit\DebugTimer;
 use Cake\Event\EventInterface;
 use Cake\Event\Event;
 use Cake\Http\Response;
+use Cake\ORM\TableRegistry;
 
 /**
  * Enforcer component
@@ -30,7 +31,7 @@ class EnforcerComponent extends Component
 
     public function beforeFilter(Event $event) {
 		// $event->stopPropagation();
-		if($this->EnforcerConfig['protectionMode'] == 'everything') {
+		if(empty($this->EnforcerConfig['protectionMode']) || $this->EnforcerConfig['protectionMode'] == 'everything') {
 			return $this->hasAccess($this->RequestHandler, $this->Auth->user());
 		}
     }
@@ -54,7 +55,8 @@ class EnforcerComponent extends Component
 	    $session->delete('permission_error_redirect');
 
 	    if(empty($pageRedirect) && !empty($request['controller'])) {
-		    $permissionManager = new PermissionManager();
+	    	$multipleGroupManagement = ((!empty($this->EnforcerConfig['groupManagement'])) && ($this->EnforcerConfig['groupManagement'] == 'multiple') ? true : false);
+		    $permissionManager = new PermissionManager($multipleGroupManagement);
 
 		    // handle params
 	    	$controller = $request['controller'];
@@ -67,18 +69,41 @@ class EnforcerComponent extends Component
 	   			'plugin' => $plugin,
 	   			'prefix' => $prefix,
 	   			'controller' => $controller . 'Controller',
-	   			'action' => $action,
+	   			'action' => preg_replace('/\\.[^.\\s]{3,4}$/', '', $action),
 	   			'params' => $params,
 	   		];
 
 		    // permission manager should handle this
-		   	$this->Auth->allow([$action]);
+		    $this->Auth->allow([
+		    	!empty($requestInfo['plugin']) ? $requestInfo['plugin'] : false,
+		    	!empty($requestInfo['prefix']) ? $requestInfo['prefix'] : false,
+		    	!empty($requestInfo['controller']) ? $requestInfo['controller'] : '',
+		    	!empty($requestInfo['action']) ? $requestInfo['action'] : '',
+		    ]);
+		   	// $this->Auth->allow('*');
 
 	   		if(!$auth) {
-	   			// quest access
+	   			// guest access
 	   			$group = 3;
 	   		} else {
-		   		$group = $auth['group_id'];
+	   			if(!empty($this->EnforcerConfig['groupManagement'])) {
+	   				if($this->EnforcerConfig['groupManagement'] == 'multiple') {
+	   					$enforcerUsersGroups = TableRegistry::get('EnforcerUsersGroups');
+	   					$groupQuery = $enforcerUsersGroups->find('all')->where(['user_id' => $auth['id']])->toArray();
+	   					$group = array_column($groupQuery, 'group_id');
+
+	   					if(empty($group)) {
+	   						// if no group is found for user use the guest group by default
+	   						$group = 3;
+	   					}
+
+	   				} else {
+	   					$group = $auth['group_id'];
+	   				}
+	   			} else {
+	   				// default use single group management
+		   			$group = $auth['group_id'];
+	   			}
 		   	}
 
 	    	if(!$permissionManager->checkAccess($requestInfo, $group)) {
@@ -109,7 +134,7 @@ class EnforcerComponent extends Component
 
 				  	return $response->withType('application/json')->withStringBody(json_encode([
 				    	'status' => $status,
-				      	'msg' => $msg
+				      	'msg' => $msg,
 				    ]));
 	    		}
 
