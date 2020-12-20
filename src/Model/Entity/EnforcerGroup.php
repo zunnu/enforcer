@@ -26,5 +26,6 @@ class EnforcerGroup extends Entity
         'name' => true,
         'modified' => true,
         'created' => true,
+        'is_admin' => true,
     ];
 }
