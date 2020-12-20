@@ -86,6 +86,7 @@ class CreateDefaultPermissionsShell extends Shell
             "plugin",
             "controller",
             "action",
+            'allowed',
         ])->toArray();
 
         $permissionArray = ['permissions' => $permissions];
@@ -144,6 +145,7 @@ class CreateDefaultPermissionsShell extends Shell
                     if(!$checkPermission) {
                         $checkPermission = $this->Permissions->newEntity();
                         $checkPermission = $this->Permissions->patchEntity($checkPermission, $permission);
+                        $checkPermission->allowed = $permission['allowed'] ? 1 : 0;
                         $this->Permissions->save($checkPermission);
                     }
                 }
