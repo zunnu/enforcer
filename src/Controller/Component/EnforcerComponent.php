@@ -120,4 +120,31 @@ class EnforcerComponent extends Component
 	    	}
 	    }
     }
+
+    // returns true or false
+    // if nothing is given will check the logged in user
+    public function isAdmin($id = null) {
+    	if(empty($id)) {
+    		$id = $this->Auth->user('id');
+    	}
+
+    	$multipleGroupManagement = ((!empty($this->EnforcerConfig['groupManagement'])) && ($this->EnforcerConfig['groupManagement'] == 'multiple') ? true : false);
+
+    	if($multipleGroupManagement) {
+			$enforcerUsersGroups = TableRegistry::get('EnforcerUsersGroups');
+			$groupQuery = $enforcerUsersGroups->find('all')->where(['user_id' => $auth['id']])->toArray();
+			$group = array_column($groupQuery, 'group_id');
+    	} else {
+			// default use single group management
+   			$group = $this->Auth->user('group_id');
+    	}
+
+    	if(is_array($group) && in_array(1, $group)) {
+    		return true;
+    	} elseif(!is_array($group) && $group == 1) {
+    		return true;
+    	}
+
+    	return false;
+    }
 }
