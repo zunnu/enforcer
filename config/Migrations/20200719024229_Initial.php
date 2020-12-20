@@ -49,7 +49,7 @@ class Initial extends AbstractMigration
         $table->saveData();
 
         $singleRow = [
-            'name'  => 'quest',
+            'name'  => 'guest',
             'modified'  => '2020-06-24 08:02:39',
             'created'  => '2020-06-24 08:02:39'
         ];
