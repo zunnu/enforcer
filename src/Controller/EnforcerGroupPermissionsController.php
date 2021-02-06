@@ -35,7 +35,7 @@ class EnforcerGroupPermissionsController extends AppController
 
                                     if($group) {
                                         // if the Controller word is not present
-                                        if(!str_contains($controllerName, 'Controller')) {
+                                        if(strpos($controllerName, 'Controller') == false) {
                                             $controllerName = $controllerName . 'Controller';
                                         }
 

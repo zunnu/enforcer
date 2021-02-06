@@ -4,14 +4,18 @@ namespace Enforcer\Model\Entity;
 use Cake\ORM\Entity;
 
 /**
- * EnforcerGroup Entity
+ * EnforcerUsersGroup Entity
  *
  * @property int $id
- * @property string $name
+ * @property int $group_id
+ * @property int $user_id
  * @property \Cake\I18n\FrozenTime $modified
  * @property \Cake\I18n\FrozenTime $created
+ *
+ * @property \Enforcer\Model\Entity\Group $group
+ * @property \Enforcer\Model\Entity\User $user
  */
-class EnforcerGroup extends Entity
+class EnforcerUsersGroup extends Entity
 {
     /**
      * Fields that can be mass assigned using newEntity() or patchEntity().
@@ -23,9 +27,11 @@ class EnforcerGroup extends Entity
      * @var array
      */
     protected $_accessible = [
-        'name' => true,
+        'group_id' => true,
+        'user_id' => true,
         'modified' => true,
         'created' => true,
-        'is_admin' => true,
+        'group' => true,
+        'user' => true,
     ];
 }

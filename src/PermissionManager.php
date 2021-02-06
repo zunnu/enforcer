@@ -22,7 +22,10 @@ class PermissionManager {
 
     protected $controllerTree = [];
 
-    public function __construct() {
+    // multiple = groupManagement either single or multiple
+    public function __construct($multiple = false) {
+        $this->multipleGroupManagement = $multiple;
+
         // this is not the right place to use this
         // TODO: move this later
         if(!Cache::config('Enforcer')) {
@@ -47,16 +50,31 @@ class PermissionManager {
 
     public function checkAccess($requestInfo, $groupID) {
         // if the group id is 1 and the action is for this plugin we will allow the user in
-        if($groupID == 1 && strtolower($requestInfo['plugin']) == 'enforcer') {
+        if(!is_array($groupID) && $groupID == 1 && strtolower($requestInfo['plugin']) == 'enforcer') {
+            return true;
+        } elseif (is_array($groupID) && in_array(1, $groupID) && strtolower($requestInfo['plugin']) == 'enforcer') {
             return true;
         }
 
-        $permissions = $this->getGroupPermissions($groupID);
+        if(!is_array($groupID)) {
+            $permissions = $this->getGroupPermissions($groupID);
+        } else {
+            // multiple groups ($groupID = array of group id's)
+            $permissions = [];
+
+            foreach ($groupID as $group) {
+                $permissions = array_merge($permissions, $this->getGroupPermissions($group));
+            }
+
+            usort($permissions, function ($permission1, $permission2) {
+                return $permission2['allowed'] <=> $permission1['allowed'];
+            });
+        }
 
         foreach ($permissions as $key => $permission) {
             if(!$permission['allowed']) {
                 if ($this->hasAccess($permission, $requestInfo)) return false;
-                // dd($this->hasAccess($permission, $requestInfo));
+                // Log::info([$permission, $this->hasAccess($permission, $requestInfo)]);
             } elseif($permission['allowed']) {
                 if ($this->hasAccess($permission, $requestInfo)) return true;
                 // dd($this->hasAccess($permission, $requestInfo));
@@ -177,7 +195,7 @@ class PermissionManager {
             if($key !== 'App') {
                 $prefix = $key;
             }
-
+            
             foreach ($controllers as $k => $controller) {
                 $namespace = null;
 
@@ -280,9 +298,10 @@ class PermissionManager {
                             foreach ($permissions as $permission) {
                                 // add found permissions to array
                                 if($permission->action == $method) {
-                                    // $groupKey = array_keys($groups, $groups[$permission->group_id]);
-
-                                    $permissionsList[$plugin][$prefix][$controllerName . 'Controller.php'][$method][$groups[$permission->group_id]] = $permission->allowed;
+                                    // if the group is still found
+                                    if(!empty($groups[$permission->group_id])) {
+                                        $permissionsList[$plugin][$prefix][$controllerName . 'Controller.php'][$method][$groups[$permission->group_id]] = $permission->allowed;
+                                    }
                                 }
                             }
                         }

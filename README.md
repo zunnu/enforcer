@@ -68,12 +68,12 @@ http://app-address/enforcer/admin/groups/index
 | ------ | ------ |
 | admin | All powerfull |
 | user | Default user group |
-| quest | Site visitors |
+| guest | Site visitors |
 
 The default admin group should be able to access the permissions page.
 You should be able to access the page using this url
 http://app-url/enforcer/admin/permissions
-<img src="https://i.imgur.com/ZSBkjJ1.png" alt="Enforcer permissions">
+<img src="https://imgur.com/N28gblK.png" alt="Enforcer permissions">
 <br>
 <img src="https://i.imgur.com/VkWzlgJ.png" alt="Enforcer permissions">
 

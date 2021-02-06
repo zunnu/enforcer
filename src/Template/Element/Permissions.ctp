@@ -43,7 +43,7 @@
 										    'templates' => [ 
 										        'inputContainer' => '<div class="switchToggle">
 										        	{{content}}
-										        	<label for="switch-' . $pluginName . '-' . $switchCount . '"></label>
+										        	<label for="switch-' . $pluginName . '-' . $switchCount . '" denied-text=' . __d("Enforcer", "Denied") . ' allowed-text=' . __d("Enforcer", "Allowed") . '></label>
 										        </div>',
 										    ],
 										    'value' => false,
@@ -73,7 +73,7 @@
 										    'templates' => [ 
 										        'inputContainer' => '<div class="switchToggle">
 										        	{{content}}
-										        	<label for="switch-' . $pluginName . '-' . $switchCount . '"></label>
+										        	<label for="switch-' . $pluginName . '-' . $switchCount . '" denied-text=' . __d("Enforcer", "Denied") . ' allowed-text=' . __d("Enforcer", "Allowed") . '></label>
 										        </div>',
 										    ],
 										    'value' => $perm,

@@ -43,6 +43,15 @@ class EnforcerGroupsTable extends Table
             'className' => 'Enforcer.EnforcerGroupPermissions',
             'propertyName' => 'Permissions'
         ]);
+
+        $this->hasMany('UsersGroups', [
+            'foreignKey' => 'group_id',
+            'className' => 'Enforcer.EnforcerUsersGroups',
+        ]);
+
+        $this->hasMany('Users', [
+            'foreignKey' => 'group_id'
+        ]);
     }
 
     /**
