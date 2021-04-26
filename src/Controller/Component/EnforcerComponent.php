@@ -9,6 +9,7 @@ use Cake\Event\EventInterface;
 use Cake\Event\Event;
 use Cake\Http\Response;
 use Cake\ORM\TableRegistry;
+use Cake\Cache\Cache;
 
 /**
  * Enforcer component
@@ -26,7 +27,6 @@ class EnforcerComponent extends Component
 
     public function initialize(array $config) {
     	$this->EnforcerConfig = $config;
-    	// return $this->hasAccess($this->RequestHandler, $this->Auth->user());
     }
 
     public function beforeFilter(Event $event) {
@@ -106,6 +106,7 @@ class EnforcerComponent extends Component
 	   			}
 		   	}
 
+		   	// no access
 	    	if(!$permissionManager->checkAccess($requestInfo, $group)) {
 		    	$response = $getController->getResponse();
 	    		$unAuthConfig = $this->EnforcerConfig['unauthorizedRedirect'];
@@ -138,6 +139,21 @@ class EnforcerComponent extends Component
 				    ]));
 	    		}
 
+	    		// create params for redirect
+	    		$redirectUrl = '';
+
+	    		if($unAuthConfig['controller'] !== str_replace('Controller', '', $requestInfo['controller']) && $unAuthConfig['action'] !== $requestInfo['action']) {
+	    			$redirectUrl = \Cake\Routing\Router::url([
+					    'plugin' => $requestInfo['plugin'],
+					    'prefix' => $requestInfo['prefix'],
+					    'controller' => str_replace('Controller', '', $requestInfo['controller']),
+					    'action' => $requestInfo['action'],
+					    'params' => $requestInfo['params'],
+					]);
+	    			$rawUrl['?'] = ['redirect' => $redirectUrl];
+	    		}
+
+
 	    		$session->write('permission_error_redirect', 'redirect');
 	    		$this->Flash->error(__('You do not appear to have permission to view this page.'));
 	    		DebugTimer::stop('Enforcer-handle');
@@ -150,9 +166,22 @@ class EnforcerComponent extends Component
     // if nothing is given will check the logged in user
     // checks the is_admin values of the groups
     public function isAdmin($id = null) {
-    	$adminGroups = [1];
+        if(!Cache::config('enforcer_admin_groups')) {
+            Cache::config('enforcer_admin_groups', [
+                'className' => 'Cake\Cache\Engine\FileEngine',
+                'duration' => '+1 week',
+                'path' => CACHE . 'enforcer' . DS,
+            ]);
+        }
+
+    	// $adminGroups = [1];
+    	$adminGroups = [];
     	$enforcerGroups = TableRegistry::get('EnforcerGroups');
-    	$adminGroupsQ = $enforcerGroups->find('all')->where(['is_admin' => 1])->toArray();
+    	$adminGroupsQ = $enforcerGroups->find('all')->where(['is_admin' => 1])->enableHydration(false)
+        ->cache(function($q) {
+            return 'enforcer_admin_groups';
+        }, 'enforcer_admin_groups')->toArray();
+
     	$adminGroups = array_unique(array_merge($adminGroups, array_column($adminGroupsQ, 'id')));
 
     	if(empty($id)) {
@@ -170,9 +199,9 @@ class EnforcerComponent extends Component
    			$group = $this->Auth->user('group_id');
     	}
 
-    	if(is_array($group) && in_array(1, $group)) {
+    	if($multipleGroupManagement && count(array_intersect($adminGroups, $group)) > 0) {
     		return true;
-    	} elseif(!is_array($group) && in_array($group, $adminGroups)) {
+    	} elseif(!$multipleGroupManagement && in_array($group, $adminGroups)) {
     		return true;
     	}
 
