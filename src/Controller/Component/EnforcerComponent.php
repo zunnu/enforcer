@@ -66,8 +66,8 @@ class EnforcerComponent extends Component
 	    	$prefix = !empty($request['prefix']) ? $request['prefix'] : '';
 
 	   		$requestInfo = [
-	   			'plugin' => $plugin,
-	   			'prefix' => $prefix,
+	   			'plugin' => !empty($plugin) ? $plugin : false,
+	   			'prefix' => !empty($prefix) ? $prefix : false,
 	   			'controller' => $controller . 'Controller',
 	   			'action' => preg_replace('/\\.[^.\\s]{3,4}$/', '', $action),
 	   			'params' => $params,
