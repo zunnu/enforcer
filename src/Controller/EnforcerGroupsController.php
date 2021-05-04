@@ -2,6 +2,7 @@
 namespace Enforcer\Controller;
 
 use Enforcer\Controller\AppController;
+use Cake\Cache\Cache;
 
 /**
  * EnforcerGroups Controller
@@ -35,8 +36,8 @@ class EnforcerGroupsController extends AppController
         if ($this->request->is('post')) {
             $group = $this->EnforcerGroups->patchEntity($group, $this->request->getData());
             if ($this->EnforcerGroups->save($group)) {
+                $this->clearAdminStatusCache();
                 $this->Flash->success(__d('Enforcer', 'The group has been saved.'));
-
                 return $this->redirect(['action' => 'index']);
             }
             $this->Flash->error(__d('Enforcer', 'The group could not be saved. Please, try again.'));
@@ -65,8 +66,8 @@ class EnforcerGroupsController extends AppController
         if ($this->request->is(['patch', 'post', 'put'])) {
             $group = $this->EnforcerGroups->patchEntity($group, $this->request->getData());
             if ($this->EnforcerGroups->save($group)) {
+                $this->clearAdminStatusCache();
                 $this->Flash->success(__d('Enforcer', 'The group has been saved.'));
-
                 return $this->redirect(['action' => 'index']);
             }
             $this->Flash->error(__d('Enforcer', 'The group could not be saved. Please, try again.'));
@@ -100,5 +101,17 @@ class EnforcerGroupsController extends AppController
         }
 
         return $this->redirect(['action' => 'index']);
+    }
+
+    private function clearAdminStatusCache() {
+        if(!Cache::config('enforcer_admin_groups')) {
+            Cache::config('enforcer_admin_groups', [
+                'className' => 'Cake\Cache\Engine\FileEngine',
+                'duration' => '+1 week',
+                'path' => CACHE . 'enforcer' . DS,
+            ]);
+        }
+
+        Cache::delete('enforcer_admin_groups', 'enforcer_admin_groups');
     }
 }
