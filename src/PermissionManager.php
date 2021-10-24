@@ -182,6 +182,12 @@ class PermissionManager {
         // find the controllers
         $path = $this->getPath($plugin, $prefix);
         $dir = new Folder($path[0]);
+
+        if(!empty($prefix) && empty($dir->pwd())) {
+            $path[0] = str_replace($prefix, strtolower($prefix), $path[0]);
+            $dir = new Folder($path[0]);
+        }
+
         $controllers = $dir->find('.*Controller\.php');
         return $controllers;
     }
@@ -189,6 +195,7 @@ class PermissionManager {
     // add methods to the controller tree
     private function getMethods($plugin = null, $controllersTree) {
         $controllersWithMethods = [];
+
         foreach ($controllersTree as $key => $controllers) {
             $prefix = null;
 
@@ -209,10 +216,15 @@ class PermissionManager {
                 $namespace .= '\Controller\\';
 
                 if(!empty($prefix)) {
+                    if(substr($prefix, 0, 1) === '/') {
+                        $prefix = ltrim($prefix, '/');
+                    }
+
                     $namespace .= $prefix . '\\';
                 }
 
                 $namespace .= str_replace('.php', '', $controller);
+                $namespace = str_replace('/', '\\', $namespace);
 
                 // init class to get methods
                 $class = new $namespace();
