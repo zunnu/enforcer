@@ -207,4 +207,35 @@ class EnforcerComponent extends Component
 
     	return false;
     }
+
+    /**
+     * Returns the request details (plugin, controller, prefix, action, params)
+     * @return [array] return the request details in array
+     */
+    public function requestDetails() {
+    	$request = $this->RequestHandler;
+
+    	if(!empty($request->params)) {
+    		$request = $request->params;
+    	} else {
+	    	$request = $request->request->params;
+    	}
+
+		// handle params
+    	$controller = $request['controller'];
+    	$action = $request['action'];
+    	$params = !empty($request['pass']) ? $request['pass'] : '';
+    	$plugin = !empty($request['plugin']) ? $request['plugin'] : '';
+    	$prefix = !empty($request['prefix']) ? $request['prefix'] : '';
+
+   		$requestInfo = [
+   			'plugin' => !empty($plugin) ? $plugin : false,
+   			'prefix' => !empty($prefix) ? $prefix : false,
+   			'controller' => $controller . 'Controller',
+   			'action' => preg_replace('/\\.[^.\\s]{3,4}$/', '', $action),
+   			'params' => $params,
+   		];
+
+   		return $requestInfo;
+    }
 }
