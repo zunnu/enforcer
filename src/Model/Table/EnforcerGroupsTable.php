@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 namespace Enforcer\Model\Table;
 
 use Cake\ORM\Query;
@@ -10,7 +12,7 @@ use Cake\Validation\Validator;
  * EnforcerGroups Model
  *
  * @method \Enforcer\Model\Entity\EnforcerGroup get($primaryKey, $options = [])
- * @method \Enforcer\Model\Entity\EnforcerGroup newEntity($data = null, array $options = [])
+ * @method \Enforcer\Model\Entity\EnforcerGroup newEmptyEntity($data = null, array $options = [])
  * @method \Enforcer\Model\Entity\EnforcerGroup[] newEntities(array $data, array $options = [])
  * @method \Enforcer\Model\Entity\EnforcerGroup|false save(\Cake\Datasource\EntityInterface $entity, $options = [])
  * @method \Enforcer\Model\Entity\EnforcerGroup saveOrFail(\Cake\Datasource\EntityInterface $entity, $options = [])
@@ -28,7 +30,7 @@ class EnforcerGroupsTable extends Table
      * @param array $config The configuration for the Table.
      * @return void
      */
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -60,7 +62,7 @@ class EnforcerGroupsTable extends Table
      * @param \Cake\Validation\Validator $validator Validator instance.
      * @return \Cake\Validation\Validator
      */
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator
             ->integer('id')

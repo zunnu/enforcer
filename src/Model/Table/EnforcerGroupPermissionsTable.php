@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 namespace Enforcer\Model\Table;
 
 use Cake\ORM\Query;
@@ -15,7 +17,7 @@ use Cake\Log\Log;
  * @property \Enforcer\Model\Table\EnforcerGroupPermissionsTable&\Cake\ORM\Association\HasMany $ChildEnforcerGroupPermissions
  *
  * @method \Enforcer\Model\Entity\EnforcerGroupPermission get($primaryKey, $options = [])
- * @method \Enforcer\Model\Entity\EnforcerGroupPermission newEntity($data = null, array $options = [])
+ * @method \Enforcer\Model\Entity\EnforcerGroupPermission newEmptyEntity($data = null, array $options = [])
  * @method \Enforcer\Model\Entity\EnforcerGroupPermission[] newEntities(array $data, array $options = [])
  * @method \Enforcer\Model\Entity\EnforcerGroupPermission|false save(\Cake\Datasource\EntityInterface $entity, $options = [])
  * @method \Enforcer\Model\Entity\EnforcerGroupPermission saveOrFail(\Cake\Datasource\EntityInterface $entity, $options = [])
@@ -34,7 +36,7 @@ class EnforcerGroupPermissionsTable extends Table
      * @param array $config The configuration for the Table.
      * @return void
      */
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -58,7 +60,7 @@ class EnforcerGroupPermissionsTable extends Table
      * @param \Cake\Validation\Validator $validator Validator instance.
      * @return \Cake\Validation\Validator
      */
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator
             ->integer('id')
@@ -95,7 +97,7 @@ class EnforcerGroupPermissionsTable extends Table
      * @param \Cake\ORM\RulesChecker $rules The rules object to be modified.
      * @return \Cake\ORM\RulesChecker
      */
-    public function buildRules(RulesChecker $rules)
+    public function buildRules(RulesChecker $rules): RulesChecker
     {
         return $rules;
     }

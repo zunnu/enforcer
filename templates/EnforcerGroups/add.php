@@ -6,12 +6,15 @@
 ?>
 <div class="container-fluid">
     <div class="col-md-12 mt-4">
-        <h2><?= __('Edit group') ?></h2>
+        <h2><?= __('Add group') ?></h2>
         <hr>
     </div>
 
     <div class="col-md-12 layout">
-        <?= $this->Form->create($group, ['action' => 'edit', 'style' => 'padding-bottom: 20px;']) ?>
+        <?= $this->Form->create($group, [
+            'url' => ['action' => 'add'],
+            'style' => 'padding-bottom: 20px;'
+        ]) ?>
 
         <div class="form-row">
             <?= $this->Form->control('name', ['label' => __('Name*'), 'required' => true, 'class' => 'form-control', 'templates' => [
@@ -24,7 +27,7 @@
                 <?= __d('Enforcer', 'Is admin?') ?>
             </div>
 
-            <?= $this->Form->input('is_admin', [
+            <?= $this->Form->control('is_admin', [
                 'type'=>'checkbox',
                 'label' => false,
                 'id' => 'is_admin',
@@ -34,11 +37,11 @@
                         <label for="is_admin" denied-text=' . __d("Enforcer", "No") . ' allowed-text=' . __d("Enforcer", "Yes") . '></label>
                     </div>',
                 ],
-                'checked' => $group->is_admin,
+                'checked' => false,
             ]); ?>
         </div>
 
-        <?= $this->Form->submit(__('Edit'), array('class' => 'btn btn-primary')); ?>
+        <?= $this->Form->submit(__('Add'), array('class' => 'btn btn-primary')); ?>
         <?= $this->Form->end(); ?>
     </div>
 </div>

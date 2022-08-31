@@ -36,7 +36,7 @@
 							  		<?php ++$switchCount; ?>
 							  		<?php $inputName = $pluginName.'.'.$prefix.'.'.$controllerName.'.'.$group.'.entireController' ?>
 								  	<td>
-									  	<?= $this->Form->input($inputName, [
+									  	<?= $this->Form->control($inputName, [
 	         								'type'=>'checkbox',
 	         								'label' => false,
 	         								'id' => 'switch-' . $pluginName . '-' . $switchCount,
@@ -66,7 +66,7 @@
 							  		<?php ++$switchCount;?>
 							  		<?php $inputName = $pluginName.'.'.$prefix.'.'.$controllerName.'.'.$groupName.'.'.$methodName ?>
 								  	<td>
-									  	<?= $this->Form->input($inputName, [
+									  	<?= $this->Form->control($inputName, [
 	         								'type'=>'checkbox',
 	         								'label' => false,
 	         								'id' => 'switch-' . $pluginName . '-' . $switchCount,

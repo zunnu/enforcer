@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 namespace Enforcer\Controller;
 
 use Enforcer\Controller\AppController;
@@ -58,7 +60,7 @@ class EnforcerGroupPermissionsController extends AppController
                                         ])->first();
 
                                         if(!$permission) {
-                                            $permission = $this->EnforcerGroupPermissions->newEntity();
+                                            $permission = $this->EnforcerGroupPermissions->newEmptyEntity();
                                             $permission->user_id = 0;
                                             $permission->group_id = $group->id;
                                             $permission->plugin = $pluginName == 'App' ? '' : $pluginName;

@@ -28,8 +28,8 @@ class PermissionManager {
 
         // this is not the right place to use this
         // TODO: move this later
-        if(!Cache::config('Enforcer')) {
-            Cache::config('Enforcer', [
+        if(!Cache::getConfig('Enforcer')) {
+            Cache::setConfig('Enforcer', [
                 'className' => 'Cake\Cache\Engine\FileEngine',
                 'duration' => '+100 week',
                 'path' => CACHE . 'enforcer' . DS,
@@ -44,8 +44,8 @@ class PermissionManager {
             'isAuthorized',
         ];
 
-        $this->Permissions = TableRegistry::get('EnforcerGroupPermissions');
-        $this->Groups = TableRegistry::get('EnforcerGroups');
+        $this->Permissions = TableRegistry::get('Enforcer.EnforcerGroupPermissions');
+        $this->Groups = TableRegistry::get('Enforcer.EnforcerGroups');
     }
 
     public function checkAccess($requestInfo, $groupID) {

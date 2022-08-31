@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 namespace Enforcer\Controller\Component;
 
 use Cake\Controller\Component;

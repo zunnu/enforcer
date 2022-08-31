@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 namespace Enforcer\Model\Table;
 
 use Cake\ORM\Query;
@@ -13,7 +15,7 @@ use Cake\Validation\Validator;
  * @property \Enforcer\Model\Table\UsersTable&\Cake\ORM\Association\BelongsTo $Users
  *
  * @method \Enforcer\Model\Entity\EnforcerUsersGroup get($primaryKey, $options = [])
- * @method \Enforcer\Model\Entity\EnforcerUsersGroup newEntity($data = null, array $options = [])
+ * @method \Enforcer\Model\Entity\EnforcerUsersGroup newEmptyEntity($data = null, array $options = [])
  * @method \Enforcer\Model\Entity\EnforcerUsersGroup[] newEntities(array $data, array $options = [])
  * @method \Enforcer\Model\Entity\EnforcerUsersGroup|false save(\Cake\Datasource\EntityInterface $entity, $options = [])
  * @method \Enforcer\Model\Entity\EnforcerUsersGroup saveOrFail(\Cake\Datasource\EntityInterface $entity, $options = [])
@@ -31,7 +33,7 @@ class EnforcerUsersGroupsTable extends Table
      * @param array $config The configuration for the Table.
      * @return void
      */
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -60,7 +62,7 @@ class EnforcerUsersGroupsTable extends Table
      * @param \Cake\Validation\Validator $validator Validator instance.
      * @return \Cake\Validation\Validator
      */
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator
             ->integer('id')
@@ -76,7 +78,7 @@ class EnforcerUsersGroupsTable extends Table
      * @param \Cake\ORM\RulesChecker $rules The rules object to be modified.
      * @return \Cake\ORM\RulesChecker
      */
-    public function buildRules(RulesChecker $rules)
+    public function buildRules(RulesChecker $rules): RulesChecker
     {
         $rules->add($rules->existsIn(['group_id'], 'Groups'));
         $rules->add($rules->existsIn(['user_id'], 'Users'));

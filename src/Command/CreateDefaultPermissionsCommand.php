@@ -1,24 +1,36 @@
 <?php
-namespace Enforcer\Shell;
+declare(strict_types=1);
+
+namespace Enforcer\Command;
 
 use Cake\Console\Shell;
+use Cake\Command\Command;
+use Cake\Console\Arguments;
+use Cake\Console\ConsoleIo;
+use Cake\Console\ConsoleOptionParser;
 use Enforcer\Plugin as Enforcer;
 use Cake\Log\Log;
 use Enforcer\PermissionManager;
 
 /**
- * CreateDefaultPermissions shell command.
+ * CreateDefaultPermissions command.
  */
-class CreateDefaultPermissionsShell extends Shell
-{
-    public function initialize() {
-        $this->Permissions = $this->loadModel('Enforcer.EnforcerGroupPermissions');
-        $this->Permissions->addBehavior('Timestamp');
+class CreateDefaultPermissionsCommand extends Command
+{   
+    /**
+     * Given start arguments in global scope
+     * @var array
+     */
+    protected $params = [];
+
+    public function initialize(): void {
+        parent::initialize();
+        $this->Permissions = $this->fetchTable('Enforcer.EnforcerGroupPermissions');
     }
 
-    public function getOptionParser()
+    public function buildOptionParser(ConsoleOptionParser $parser): ConsoleOptionParser
     {
-        $parser = parent::getOptionParser();
+        $parser = parent::buildOptionParser($parser);
 
         $parser->addOption('createFile', array(
             'short' => 'c',
@@ -43,7 +55,6 @@ class CreateDefaultPermissionsShell extends Shell
             'boolean' => true
         ));
 
-
         return $parser;
     }
 
@@ -52,18 +63,20 @@ class CreateDefaultPermissionsShell extends Shell
      *
      * @return bool|int|null Success or error code.
      */
-    public function main()
+    public function execute(Arguments $args, ConsoleIo $io): void
     {   
         // default path
         $plugin = new Enforcer();
         $path = $plugin->getClassPath() . 'default_permissions.json';
+        $this->params = $args->getOptions();
 
         if(!empty($this->params['path'])) {
             $path = $this->params['path'];
         }
 
         if(!empty($this->params['createFile'])) {
-            return $this->createPermissionFile($path);
+            $this->createPermissionFile($path);
+            die();
         } elseif(!empty($this->params['importFile'])) {
             $this->importPermissionFile($path);
 
@@ -72,13 +85,15 @@ class CreateDefaultPermissionsShell extends Shell
             $permissionManager->refreshCaches();
             Log::info('Permission cache set!');
         } else {
-            $this->out($this->OptionParser->help());
+            Log::info('Nothing is done by default please see the options using --help param');
+            // $this->out($this->OptionParser->help());
         }
 
         die();
     }
 
-    public function createPermissionFile($path) {
+    public function createPermissionFile($path): void
+    {
         $permissions = $this->Permissions->find('all')->enableHydration(false)->select([
             "user_id",
             "group_id",
@@ -116,7 +131,8 @@ class CreateDefaultPermissionsShell extends Shell
         fclose($file);
     }
 
-    public function importPermissionFile($path) {
+    public function importPermissionFile($path): void
+    {
         if(file_exists($path)) {
             Log::info('Loading file...');
             $permissions = file_get_contents($path);
@@ -143,7 +159,7 @@ class CreateDefaultPermissionsShell extends Shell
                     ])->first();
 
                     if(!$checkPermission) {
-                        $checkPermission = $this->Permissions->newEntity();
+                        $checkPermission = $this->Permissions->newEmptyEntity();
                         $checkPermission = $this->Permissions->patchEntity($checkPermission, $permission);
                         $checkPermission->allowed = $permission['allowed'] ? 1 : 0;
                         $this->Permissions->save($checkPermission);
@@ -166,7 +182,7 @@ class CreateDefaultPermissionsShell extends Shell
                         ])->first();
 
                         if(!$checkGroup) {
-                            $checkGroup = $this->Permissions->Groups->newEntity();
+                            $checkGroup = $this->Permissions->Groups->newEmptyEntity();
                         }
 
                         $checkGroup = $this->Permissions->Groups->patchEntity($checkGroup, $group);
@@ -184,7 +200,7 @@ class CreateDefaultPermissionsShell extends Shell
                         ])->first();
 
                         if(!$checkUsersGroup) {
-                            $checkUsersGroup = $this->Permissions->Groups->UsersGroups->newEntity();
+                            $checkUsersGroup = $this->Permissions->Groups->UsersGroups->newEmptyEntity();
                         }
 
                         $checkUsersGroup = $this->Permissions->Groups->UsersGroups->patchEntity($checkUsersGroup, $usersGroup);

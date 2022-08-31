@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 namespace Enforcer\Controller\Component;
 
 use Cake\Controller\Component;
@@ -25,14 +27,16 @@ class EnforcerComponent extends Component
 
     public $components = ['RequestHandler', 'Flash', 'Auth'];
 
-    public function initialize(array $config) {
+    public function initialize(array $config): void
+    {
     	$this->EnforcerConfig = $config;
     }
 
-    public function beforeFilter(Event $event) {
+    public function startup(EventInterface $event): ?Response
+    {
 		// $event->stopPropagation();
 		if(empty($this->EnforcerConfig['protectionMode']) || $this->EnforcerConfig['protectionMode'] == 'everything') {
-			return $this->hasAccess($this->RequestHandler, $this->Auth->user());
+			return $this->hasAccess($event, $this->Auth->user());
 		}
     }
 
@@ -40,17 +44,17 @@ class EnforcerComponent extends Component
 	 * Main entry point to the plugin. This should be called from the AppController beforeFilter OR
 	 * from the beforeFilter of the controllers you wish to protect
 	*/
-    public function hasAccess($request, $auth) {
+    public function hasAccess(EventInterface $event, $auth) {
+    	$requestObj = $event->getSubject()->getRequest();
+    	$request = [];
     	DebugTimer::start('Enforcer-handle');
 
-    	if(!empty($request->params)) {
-    		$request = $request->params;
-    	} else {
-	    	$request = $request->request->params;
+    	if(!empty($requestObj->getAttribute('params'))) {
+    		$request = $requestObj->getAttribute('params');
     	}
 
     	$getController = $this->getController();
-	    $session = $getController->request->session();
+	    $session = $getController->getRequest()->getSession();
 	    $pageRedirect = $session->read('permission_error_redirect');
 	    $session->delete('permission_error_redirect');
 
@@ -166,8 +170,8 @@ class EnforcerComponent extends Component
     // if nothing is given will check the logged in user
     // checks the is_admin values of the groups
     public function isAdmin($id = null) {
-        if(!Cache::config('enforcer_admin_groups')) {
-            Cache::config('enforcer_admin_groups', [
+        if(!Cache::getConfig('enforcer_admin_groups')) {
+            Cache::setConfig('enforcer_admin_groups', [
                 'className' => 'Cake\Cache\Engine\FileEngine',
                 'duration' => '+1 week',
                 'path' => CACHE . 'enforcer' . DS,

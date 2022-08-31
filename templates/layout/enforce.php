@@ -16,8 +16,8 @@ $session = $this->request->getSession()->read('Auth.User');
     <?= $this->Html->meta('icon') ?>
 
     <?= $this->Html->css('Enforcer.bootstrap.min.css') ?>
-    <?= $this->Html->css('Enforcer.style.css') ?>
     <?= $this->Html->css('Enforcer.toastr.min.css') ?>
+    <?= $this->Html->css('Enforcer.style.css') ?>
 
     <?= $this->Html->script('Enforcer.jquery.min.js'); ?>
     <?= $this->Html->script('Enforcer.popper.min.js'); ?>

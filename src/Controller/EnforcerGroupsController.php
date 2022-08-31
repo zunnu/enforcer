@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 namespace Enforcer\Controller;
 
 use Enforcer\Controller\AppController;
@@ -32,7 +34,7 @@ class EnforcerGroupsController extends AppController
      */
     public function add()
     {
-        $group = $this->EnforcerGroups->newEntity();
+        $group = $this->EnforcerGroups->newEmptyEntity();
         if ($this->request->is('post')) {
             $group = $this->EnforcerGroups->patchEntity($group, $this->request->getData());
             if ($this->EnforcerGroups->save($group)) {
@@ -64,7 +66,9 @@ class EnforcerGroupsController extends AppController
         ]);
 
         if ($this->request->is(['patch', 'post', 'put'])) {
-            $group = $this->EnforcerGroups->patchEntity($group, $this->request->getData());
+            $data = $this->request->getData();
+            $group = $this->EnforcerGroups->patchEntity($group, $data);
+
             if ($this->EnforcerGroups->save($group)) {
                 $this->clearAdminStatusCache();
                 $this->Flash->success(__d('Enforcer', 'The group has been saved.'));
@@ -104,8 +108,8 @@ class EnforcerGroupsController extends AppController
     }
 
     private function clearAdminStatusCache() {
-        if(!Cache::config('enforcer_admin_groups')) {
-            Cache::config('enforcer_admin_groups', [
+        if(!Cache::getConfig('enforcer_admin_groups')) {
+            Cache::setConfig('enforcer_admin_groups', [
                 'className' => 'Cake\Cache\Engine\FileEngine',
                 'duration' => '+1 week',
                 'path' => CACHE . 'enforcer' . DS,
