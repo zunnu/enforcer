@@ -32,7 +32,7 @@ class EnforcerComponent extends Component
     	$this->EnforcerConfig = $config;
     }
 
-    public function startup(EventInterface $event): ?Response
+    public function beforeFilter(EventInterface $event): ?Response
     {
 		// $event->stopPropagation();
 		if(empty($this->EnforcerConfig['protectionMode']) || $this->EnforcerConfig['protectionMode'] == 'everything') {
