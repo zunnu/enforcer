@@ -12,6 +12,8 @@ use Cake\Event\Event;
 use Cake\Http\Response;
 use Cake\ORM\TableRegistry;
 use Cake\Cache\Cache;
+use Cake\Log\Log;
+use Cake\Event\EventManager;
 
 /**
  * Enforcer component
@@ -25,26 +27,48 @@ class EnforcerComponent extends Component
      */
     protected $_defaultConfig = [];
 
-    public $components = ['RequestHandler', 'Flash', 'Auth'];
+    public $components = ['Flash', 'Auth'];
 
+    /**
+     * Initialize properties.
+     *
+     * @param array<string, mixed> $config The config data.
+     * @return void
+     */
     public function initialize(array $config): void
     {
     	$this->EnforcerConfig = $config;
+        EventManager::instance()->on('Exception.beforeRender', function (EventInterface $event, $error) {
+        });
+
+        EventManager::instance()->on('Error.beforeRender', function (EventInterface $event, $error) {
+        });
     }
 
-    public function beforeFilter(EventInterface $event): ?Response
+    public function beforeFilter(EventInterface $event)
+    {	
+		if(empty($this->EnforcerConfig['protectionMode']) || $this->EnforcerConfig['protectionMode'] == 'everything') {
+			// return $this->hasAccess($event, $this->Auth->user());
+		}
+
+		return null;
+    }
+
+    public function beforeRender(EventInterface $event)
     {
-		// $event->stopPropagation();
 		if(empty($this->EnforcerConfig['protectionMode']) || $this->EnforcerConfig['protectionMode'] == 'everything') {
 			return $this->hasAccess($event, $this->Auth->user());
 		}
+
+		return null;
     }
 
 	/**
 	 * Main entry point to the plugin. This should be called from the AppController beforeFilter OR
 	 * from the beforeFilter of the controllers you wish to protect
 	*/
-    public function hasAccess(EventInterface $event, $auth) {
+    public function hasAccess(EventInterface $event, $auth)
+    {
     	$requestObj = $event->getSubject()->getRequest();
     	$request = [];
     	DebugTimer::start('Enforcer-handle');
@@ -169,7 +193,8 @@ class EnforcerComponent extends Component
     // returns true or false
     // if nothing is given will check the logged in user
     // checks the is_admin values of the groups
-    public function isAdmin($id = null) {
+    public function isAdmin($id = null): bool
+    {
         if(!Cache::getConfig('enforcer_admin_groups')) {
             Cache::setConfig('enforcer_admin_groups', [
                 'className' => 'Cake\Cache\Engine\FileEngine',
@@ -216,14 +241,10 @@ class EnforcerComponent extends Component
      * Returns the request details (plugin, controller, prefix, action, params)
      * @return [array] return the request details in array
      */
-    public function requestDetails() {
-    	$request = $this->RequestHandler;
-
-    	if(!empty($request->params)) {
-    		$request = $request->params;
-    	} else {
-	    	$request = $request->request->params;
-    	}
+    public function requestDetails(): array
+    {
+    	$requestObj = $this->_registry->getController()->getRequest();
+    	$request = $requestObj->getAttribute('params');
 
 		// handle params
     	$controller = $request['controller'];

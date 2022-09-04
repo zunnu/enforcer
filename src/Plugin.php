@@ -8,8 +8,6 @@ use Cake\Core\PluginApplicationInterface;
 use Cake\Http\MiddlewareQueue;
 use Cake\Routing\RouteBuilder;
 use Cake\Console\CommandCollection;
-use Cake\Core\Configure;
-use Cake\Log\Log;
 
 /**
  * Plugin for Enforcer
