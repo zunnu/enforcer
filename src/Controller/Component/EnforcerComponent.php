@@ -32,7 +32,15 @@ class EnforcerComponent extends Component
     public function beforeFilter(Event $event) {
 		// $event->stopPropagation();
 		if(empty($this->EnforcerConfig['protectionMode']) || $this->EnforcerConfig['protectionMode'] == 'everything') {
-			return $this->hasAccess($this->RequestHandler, $this->Auth->user());
+			$access = $this->hasAccess($this->RequestHandler, $this->Auth->user());
+
+			if(empty($access)) {
+				return;
+			}
+
+			$statusCode = method_exists($access, 'getStatusCode') ? $access->getStatusCode() : null;
+			if(!empty($statusCode) && $statusCode == 302) $event->stopPropagation();
+			return $access;
 		}
     }
 
@@ -42,6 +50,7 @@ class EnforcerComponent extends Component
 	*/
     public function hasAccess($request, $auth) {
     	DebugTimer::start('Enforcer-handle');
+	    $requestTarget = $request->request->getRequestTarget();
 
     	if(!empty($request->params)) {
     		$request = $request->params;
@@ -51,10 +60,8 @@ class EnforcerComponent extends Component
 
     	$getController = $this->getController();
 	    $session = $getController->request->session();
-	    $pageRedirect = $session->read('permission_error_redirect');
-	    $session->delete('permission_error_redirect');
 
-	    if(empty($pageRedirect) && !empty($request['controller'])) {
+	    if(!empty($request['controller'])) {
 	    	$multipleGroupManagement = ((!empty($this->EnforcerConfig['groupManagement'])) && ($this->EnforcerConfig['groupManagement'] == 'multiple') ? true : false);
 		    $permissionManager = new PermissionManager($multipleGroupManagement);
 
@@ -105,7 +112,7 @@ class EnforcerComponent extends Component
 		   			$group = $auth['group_id'];
 	   			}
 		   	}
-
+		   	
 		   	// no access
 	    	if(!$permissionManager->checkAccess($requestInfo, $group)) {
 		    	$response = $getController->getResponse();
@@ -143,18 +150,17 @@ class EnforcerComponent extends Component
 	    		$redirectUrl = '';
 
 	    		if($unAuthConfig['controller'] !== str_replace('Controller', '', $requestInfo['controller']) && $unAuthConfig['action'] !== $requestInfo['action']) {
-	    			$redirectUrl = \Cake\Routing\Router::url([
-					    'plugin' => $requestInfo['plugin'],
-					    'prefix' => $requestInfo['prefix'],
-					    'controller' => str_replace('Controller', '', $requestInfo['controller']),
-					    'action' => $requestInfo['action'],
-					    'params' => $requestInfo['params'],
-					]);
-	    			$rawUrl['?'] = ['redirect' => $redirectUrl];
+	    // 			$redirectUrl = \Cake\Routing\Router::url([
+					//     'plugin' => $requestInfo['plugin'],
+					//     'prefix' => $requestInfo['prefix'],
+					//     'controller' => str_replace('Controller', '', $requestInfo['controller']),
+					//     'action' => $requestInfo['action'],
+					//     'pass' => $requestInfo['params'],
+					// ]);
+					// dd($redirectUrl);
+	    			$rawUrl['?'] = ['redirect' => $requestTarget];
 	    		}
 
-
-	    		$session->write('permission_error_redirect', 'redirect');
 	    		$this->Flash->error(__('You do not appear to have permission to view this page.'));
 	    		DebugTimer::stop('Enforcer-handle');
 	    		return $getController->redirect($rawUrl);
