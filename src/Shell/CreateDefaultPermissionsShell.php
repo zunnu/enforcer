@@ -11,7 +11,8 @@ use Enforcer\PermissionManager;
  */
 class CreateDefaultPermissionsShell extends Shell
 {
-    public function initialize() {
+    public function initialize()
+    {
         $this->Permissions = $this->loadModel('Enforcer.EnforcerGroupPermissions');
         $this->Permissions->addBehavior('Timestamp');
     }
@@ -20,28 +21,36 @@ class CreateDefaultPermissionsShell extends Shell
     {
         $parser = parent::getOptionParser();
 
-        $parser->addOption('createFile', array(
+        $parser->addOption(
+            'createFile', array(
             'short' => 'c',
             'help' => 'Creates the permissions json',
             'boolean' => true
-        ));
+            )
+        );
 
-        $parser->addOption('importFile', array(
+        $parser->addOption(
+            'importFile', array(
             'short' => 'i',
             'help' => 'Imports the permissions json file',
             'boolean' => true
-        ));
+            )
+        );
 
-        $parser->addOption('path', array(
+        $parser->addOption(
+            'path', array(
             'short' => 'p',
             'help' => 'Path where to export the file or path where from import the file',
-        ));
+            )
+        );
 
-        $parser->addOption('addGroups', array(
+        $parser->addOption(
+            'addGroups', array(
             'short' => 'g',
             'help' => 'Add the groups to the file and or import the groups too',
             'boolean' => true
-        ));
+            )
+        );
 
 
         return $parser;
@@ -78,8 +87,10 @@ class CreateDefaultPermissionsShell extends Shell
         die();
     }
 
-    public function createPermissionFile($path) {
-        $permissions = $this->Permissions->find('all')->enableHydration(false)->select([
+    public function createPermissionFile($path)
+    {
+        $permissions = $this->Permissions->find('all')->enableHydration(false)->select(
+            [
             "user_id",
             "group_id",
             "prefix",
@@ -87,24 +98,29 @@ class CreateDefaultPermissionsShell extends Shell
             "controller",
             "action",
             'allowed',
-        ])->toArray();
+            ]
+        )->toArray();
 
         $permissionArray = ['permissions' => $permissions];
 
         if(!empty($this->params['addGroups'])) {
-            $baseGroups = $this->Permissions->Groups->find('all')->enableHydration(false)->select([
+            $baseGroups = $this->Permissions->Groups->find('all')->enableHydration(false)->select(
+                [
                 'id',
                 'name',
                 'is_admin',
-            ])->toArray();
+                ]
+            )->toArray();
 
             $permissionArray['baseGroups'] = $baseGroups;
 
-            $usersGroups = $this->Permissions->Groups->UsersGroups->find('all')->enableHydration(false)->select([
+            $usersGroups = $this->Permissions->Groups->UsersGroups->find('all')->enableHydration(false)->select(
+                [
                 'id',
                 'user_id',
                 'group_id'
-            ])->toArray();
+                ]
+            )->toArray();
 
             $permissionArray['usersGroups'] = $usersGroups;
         }
@@ -116,7 +132,8 @@ class CreateDefaultPermissionsShell extends Shell
         fclose($file);
     }
 
-    public function importPermissionFile($path) {
+    public function importPermissionFile($path)
+    {
         if(file_exists($path)) {
             Log::info('Loading file...');
             $permissions = file_get_contents($path);
@@ -133,14 +150,16 @@ class CreateDefaultPermissionsShell extends Shell
                     unset($permission['rght']);
                     unset($permission['lft']);
 
-                    $checkPermission = $this->Permissions->find('all')->where([
+                    $checkPermission = $this->Permissions->find('all')->where(
+                        [
                         "user_id" => $permission['user_id'],
                         "group_id" => $permission['group_id'],
                         "prefix" => $permission['prefix'],
                         "plugin" => $permission['plugin'],
                         "controller" => $permission['controller'],
                         "action" => $permission['action'],
-                    ])->first();
+                        ]
+                    )->first();
 
                     if(!$checkPermission) {
                         $checkPermission = $this->Permissions->newEntity();
@@ -161,9 +180,11 @@ class CreateDefaultPermissionsShell extends Shell
 
                 if(!empty($permissions['baseGroups'])) {
                     foreach ($permissions['baseGroups'] as $group) {
-                        $checkGroup = $this->Permissions->Groups->find('all')->where([
+                        $checkGroup = $this->Permissions->Groups->find('all')->where(
+                            [
                             "name" => $group['name'],
-                        ])->first();
+                            ]
+                        )->first();
 
                         if(!$checkGroup) {
                             $checkGroup = $this->Permissions->Groups->newEntity();
@@ -178,10 +199,12 @@ class CreateDefaultPermissionsShell extends Shell
 
                 if(!empty($permissions['usersGroups'])) {
                     foreach ($permissions['usersGroups'] as $usersGroup) {
-                        $checkUsersGroup = $this->Permissions->Groups->UsersGroups->find('all')->where([
+                        $checkUsersGroup = $this->Permissions->Groups->UsersGroups->find('all')->where(
+                            [
                             'user_id' => $usersGroup['user_id'],
                             'group_id' => $usersGroup['group_id'],
-                        ])->first();
+                            ]
+                        )->first();
 
                         if(!$checkUsersGroup) {
                             $checkUsersGroup = $this->Permissions->Groups->UsersGroups->newEntity();

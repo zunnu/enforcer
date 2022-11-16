@@ -25,223 +25,240 @@ class EnforcerComponent extends Component
 
     public $components = ['RequestHandler', 'Flash', 'Auth'];
 
-    public function initialize(array $config) {
-    	$this->EnforcerConfig = $config;
+    public function initialize(array $config)
+    {
+        $this->EnforcerConfig = $config;
     }
 
-    public function beforeFilter(Event $event) {
-		// $event->stopPropagation();
-		if(empty($this->EnforcerConfig['protectionMode']) || $this->EnforcerConfig['protectionMode'] == 'everything') {
-			$access = $this->hasAccess($this->RequestHandler, $this->Auth->user());
+    public function beforeFilter(Event $event)
+    {
+        // $event->stopPropagation();
+        if(empty($this->EnforcerConfig['protectionMode']) || $this->EnforcerConfig['protectionMode'] == 'everything') {
+            $access = $this->hasAccess($this->RequestHandler, $this->Auth->user());
 
-			if(empty($access)) {
-				return;
-			}
+            if(empty($access)) {
+                return;
+            }
 
-			$statusCode = method_exists($access, 'getStatusCode') ? $access->getStatusCode() : null;
-			if(!empty($statusCode) && $statusCode == 302) $event->stopPropagation();
-			return $access;
-		}
+            $statusCode = method_exists($access, 'getStatusCode') ? $access->getStatusCode() : null;
+            if(!empty($statusCode) && $statusCode == 302) { $event->stopPropagation();
+            }
+            return $access;
+        }
     }
 
-	/**
-	 * Main entry point to the plugin. This should be called from the AppController beforeFilter OR
-	 * from the beforeFilter of the controllers you wish to protect
-	*/
-    public function hasAccess($request, $auth) {
-    	DebugTimer::start('Enforcer-handle');
-	    $requestTarget = $request->request->getRequestTarget();
+    /**
+     * Main entry point to the plugin. This should be called from the AppController beforeFilter OR
+     * from the beforeFilter of the controllers you wish to protect
+     */
+    public function hasAccess($request, $auth)
+    {
+        DebugTimer::start('Enforcer-handle');
+        $requestTarget = $request->request->getRequestTarget();
 
-    	if(!empty($request->params)) {
-    		$request = $request->params;
-    	} else {
-	    	$request = $request->request->params;
-    	}
+        if(!empty($request->params)) {
+            $request = $request->params;
+        } else {
+            $request = $request->request->params;
+        }
 
-    	$getController = $this->getController();
-	    $session = $getController->request->session();
+        $getController = $this->getController();
+        $session = $getController->request->session();
 
-	    if(!empty($request['controller'])) {
-	    	$multipleGroupManagement = ((!empty($this->EnforcerConfig['groupManagement'])) && ($this->EnforcerConfig['groupManagement'] == 'multiple') ? true : false);
-		    $permissionManager = new PermissionManager($multipleGroupManagement);
+        if(!empty($request['controller'])) {
+            $multipleGroupManagement = ((!empty($this->EnforcerConfig['groupManagement'])) && ($this->EnforcerConfig['groupManagement'] == 'multiple') ? true : false);
+            $permissionManager = new PermissionManager($multipleGroupManagement);
 
-		    // handle params
-	    	$controller = $request['controller'];
-	    	$action = $request['action'];
-	    	$params = !empty($request['pass']) ? $request['pass'] : '';
-	    	$plugin = !empty($request['plugin']) ? $request['plugin'] : '';
-	    	$prefix = !empty($request['prefix']) ? $request['prefix'] : '';
+            // handle params
+            $controller = $request['controller'];
+            $action = $request['action'];
+            $params = !empty($request['pass']) ? $request['pass'] : '';
+            $plugin = !empty($request['plugin']) ? $request['plugin'] : '';
+            $prefix = !empty($request['prefix']) ? $request['prefix'] : '';
 
-			$requestInfo = [
-	   			'plugin' => !empty($plugin) ? $plugin : false,
-	   			'prefix' => !empty($prefix) ? $prefix : false,
-	   			'controller' => $controller . 'Controller',
-	   			'action' => preg_replace('/\\.[^.\\s]{3,4}$/', '', $action),
-	   			'params' => $params,
-	   		];
+            $requestInfo = [
+            'plugin' => !empty($plugin) ? $plugin : false,
+            'prefix' => !empty($prefix) ? $prefix : false,
+            'controller' => $controller . 'Controller',
+            'action' => preg_replace('/\\.[^.\\s]{3,4}$/', '', $action),
+            'params' => $params,
+            ];
 
-		    // permission manager should handle this
-		    $this->Auth->allow([
-		    	!empty($requestInfo['plugin']) ? $requestInfo['plugin'] : false,
-		    	!empty($requestInfo['prefix']) ? $requestInfo['prefix'] : false,
-		    	!empty($requestInfo['controller']) ? $requestInfo['controller'] : '',
-		    	!empty($requestInfo['action']) ? $requestInfo['action'] : '',
-		    ]);
-		   	// $this->Auth->allow('*');
+            // permission manager should handle this
+            $this->Auth->allow(
+                [
+                !empty($requestInfo['plugin']) ? $requestInfo['plugin'] : false,
+                !empty($requestInfo['prefix']) ? $requestInfo['prefix'] : false,
+                !empty($requestInfo['controller']) ? $requestInfo['controller'] : '',
+                !empty($requestInfo['action']) ? $requestInfo['action'] : '',
+                ]
+            );
+            // $this->Auth->allow('*');
 
-	   		if(!$auth) {
-	   			// guest access
-	   			$group = 3;
-	   		} else {
-	   			if(!empty($this->EnforcerConfig['groupManagement'])) {
-	   				if($this->EnforcerConfig['groupManagement'] == 'multiple') {
-	   					$enforcerUsersGroups = TableRegistry::get('EnforcerUsersGroups');
-	   					$groupQuery = $enforcerUsersGroups->find('all')->where(['user_id' => $auth['id']])->toArray();
-	   					$group = array_column($groupQuery, 'group_id');
+            if(!$auth) {
+                // guest access
+                $group = 3;
+            } else {
+                if(!empty($this->EnforcerConfig['groupManagement'])) {
+                    if($this->EnforcerConfig['groupManagement'] == 'multiple') {
+                        $enforcerUsersGroups = TableRegistry::get('EnforcerUsersGroups');
+                        $groupQuery = $enforcerUsersGroups->find('all')->where(['user_id' => $auth['id']])->toArray();
+                        $group = array_column($groupQuery, 'group_id');
 
-	   					if(empty($group)) {
-	   						// if no group is found for user use the guest group by default
-	   						$group = 3;
-	   					}
+                        if(empty($group)) {
+                            // if no group is found for user use the guest group by default
+                            $group = 3;
+                        }
 
-	   				} else {
-	   					$group = $auth['group_id'];
-	   				}
-	   			} else {
-	   				// default use single group management
-		   			$group = $auth['group_id'];
-	   			}
-		   	}
-		   	
-		   	// no access
-	    	if(!$permissionManager->checkAccess($requestInfo, $group)) {
-		    	$response = $getController->getResponse();
-	    		$unAuthConfig = $this->EnforcerConfig['unauthorizedRedirect'];
+                    } else {
+                        $group = $auth['group_id'];
+                    }
+                } else {
+                    // default use single group management
+                    $group = $auth['group_id'];
+                }
+            }
+               
+            // no access
+            if(!$permissionManager->checkAccess($requestInfo, $group)) {
+                $response = $getController->getResponse();
+                $unAuthConfig = $this->EnforcerConfig['unauthorizedRedirect'];
 
-	    		$rawUrl = [
-	    			'prefix' => !empty($unAuthConfig['prefix']) ? $unAuthConfig['prefix'] : false,
-	    			'plugin' => !empty($unAuthConfig['plugin']) ? $unAuthConfig['plugin'] : false,
-	    			'controller' => !empty($unAuthConfig['controller']) ? $unAuthConfig['controller'] : false,
-	    			'action' => !empty($unAuthConfig['action']) ? $unAuthConfig['action'] : false,
-	    		];
+                $rawUrl = [
+                'prefix' => !empty($unAuthConfig['prefix']) ? $unAuthConfig['prefix'] : false,
+                'plugin' => !empty($unAuthConfig['plugin']) ? $unAuthConfig['plugin'] : false,
+                'controller' => !empty($unAuthConfig['controller']) ? $unAuthConfig['controller'] : false,
+                'action' => !empty($unAuthConfig['action']) ? $unAuthConfig['action'] : false,
+                ];
 
-	    		// ajax handle
-	    		if($getController->getRequest()->is('ajax')) {
-					$response = $response->withStatus(403)->withoutHeader('Location');
-					$status = $response->getStatusCode();
-					$url = \Cake\Routing\Router::url($rawUrl, true);
-					$msg = __d('Enforcer', 'You do not appear to have permission to view this page.');
-					$this->getController()->setResponse($response);
-					$this->getController()->viewBuilder()->disableAutoLayout();
-					$this->getController()->set('_redirect', compact('url', 'status', 'msg'));
+                // ajax handle
+                if($getController->getRequest()->is('ajax')) {
+                    $response = $response->withStatus(403)->withoutHeader('Location');
+                    $status = $response->getStatusCode();
+                    $url = \Cake\Routing\Router::url($rawUrl, true);
+                    $msg = __d('Enforcer', 'You do not appear to have permission to view this page.');
+                    $this->getController()->setResponse($response);
+                    $this->getController()->viewBuilder()->disableAutoLayout();
+                    $this->getController()->set('_redirect', compact('url', 'status', 'msg'));
 
-			     	// $event = new Event('Enforcer.Permissions', $this->getController());
-					// $event->stopPropagation();
+                    // $event = new Event('Enforcer.Permissions', $this->getController());
+                    // $event->stopPropagation();
 
-					DebugTimer::stop('Enforcer-handle');
+                    DebugTimer::stop('Enforcer-handle');
 
-				  	return $response->withType('application/json')->withStringBody(json_encode([
-				    	'status' => $status,
-				      	'msg' => $msg,
-				    ]));
-	    		}
+                    return $response->withType('application/json')->withStringBody(
+                        json_encode(
+                            [
+                            'status' => $status,
+                            'msg' => $msg,
+                            ]
+                        )
+                    );
+                }
 
-	    		// create params for redirect
-	    		$redirectUrl = '';
+                // create params for redirect
+                $redirectUrl = '';
 
-	    		if($unAuthConfig['controller'] !== str_replace('Controller', '', $requestInfo['controller']) && $unAuthConfig['action'] !== $requestInfo['action']) {
-	    // 			$redirectUrl = \Cake\Routing\Router::url([
-					//     'plugin' => $requestInfo['plugin'],
-					//     'prefix' => $requestInfo['prefix'],
-					//     'controller' => str_replace('Controller', '', $requestInfo['controller']),
-					//     'action' => $requestInfo['action'],
-					//     'pass' => $requestInfo['params'],
-					// ]);
-					// dd($redirectUrl);
-	    			$rawUrl['?'] = ['redirect' => $requestTarget];
-	    		}
+                if($unAuthConfig['controller'] !== str_replace('Controller', '', $requestInfo['controller']) && $unAuthConfig['action'] !== $requestInfo['action']) {
+                    //             $redirectUrl = \Cake\Routing\Router::url([
+                    //     'plugin' => $requestInfo['plugin'],
+                    //     'prefix' => $requestInfo['prefix'],
+                    //     'controller' => str_replace('Controller', '', $requestInfo['controller']),
+                    //     'action' => $requestInfo['action'],
+                    //     'pass' => $requestInfo['params'],
+                    // ]);
+                    // dd($redirectUrl);
+                    $rawUrl['?'] = ['redirect' => $requestTarget];
+                }
 
-	    		$this->Flash->error(__('You do not appear to have permission to view this page.'));
-	    		DebugTimer::stop('Enforcer-handle');
-	    		return $getController->redirect($rawUrl);
-	    	}
-	    }
+                $this->Flash->error(__('You do not appear to have permission to view this page.'));
+                DebugTimer::stop('Enforcer-handle');
+                return $getController->redirect($rawUrl);
+            }
+        }
     }
 
     // returns true or false
     // if nothing is given will check the logged in user
     // checks the is_admin values of the groups
-    public function isAdmin($id = null) {
+    public function isAdmin($id = null)
+    {
         if(!Cache::config('enforcer_admin_groups')) {
-            Cache::config('enforcer_admin_groups', [
+            Cache::config(
+                'enforcer_admin_groups', [
                 'className' => 'Cake\Cache\Engine\FileEngine',
                 'duration' => '+1 week',
                 'path' => CACHE . 'enforcer' . DS,
-            ]);
+                ]
+            );
         }
 
-    	// $adminGroups = [1];
-    	$adminGroups = [];
-    	$enforcerGroups = TableRegistry::get('EnforcerGroups');
-    	$adminGroupsQ = $enforcerGroups->find('all')->where(['is_admin' => 1])->enableHydration(false)
-        ->cache(function($q) {
-            return 'enforcer_admin_groups';
-        }, 'enforcer_admin_groups')->toArray();
+        // $adminGroups = [1];
+        $adminGroups = [];
+        $enforcerGroups = TableRegistry::get('EnforcerGroups');
+        $adminGroupsQ = $enforcerGroups->find('all')->where(['is_admin' => 1])->enableHydration(false)
+            ->cache(
+                function ($q) {
+                    return 'enforcer_admin_groups';
+                }, 'enforcer_admin_groups'
+            )->toArray();
 
-    	$adminGroups = array_unique(array_merge($adminGroups, array_column($adminGroupsQ, 'id')));
+        $adminGroups = array_unique(array_merge($adminGroups, array_column($adminGroupsQ, 'id')));
 
-    	if(empty($id)) {
-    		$id = $this->Auth->user('id');
-    	}
+        if(empty($id)) {
+            $id = $this->Auth->user('id');
+        }
 
-    	$multipleGroupManagement = ((!empty($this->EnforcerConfig['groupManagement'])) && ($this->EnforcerConfig['groupManagement'] == 'multiple') ? true : false);
+        $multipleGroupManagement = ((!empty($this->EnforcerConfig['groupManagement'])) && ($this->EnforcerConfig['groupManagement'] == 'multiple') ? true : false);
 
-    	if($multipleGroupManagement) {
-			$enforcerUsersGroups = TableRegistry::get('EnforcerUsersGroups');
-			$groupQuery = $enforcerUsersGroups->find('all')->where(['user_id' => $auth['id']])->toArray();
-			$group = array_column($groupQuery, 'group_id');
-    	} else {
-			// default use single group management
-   			$group = $this->Auth->user('group_id');
-    	}
+        if($multipleGroupManagement) {
+            $enforcerUsersGroups = TableRegistry::get('EnforcerUsersGroups');
+            $groupQuery = $enforcerUsersGroups->find('all')->where(['user_id' => $auth['id']])->toArray();
+            $group = array_column($groupQuery, 'group_id');
+        } else {
+            // default use single group management
+            $group = $this->Auth->user('group_id');
+        }
 
-    	if($multipleGroupManagement && count(array_intersect($adminGroups, $group)) > 0) {
-    		return true;
-    	} elseif(!$multipleGroupManagement && in_array($group, $adminGroups)) {
-    		return true;
-    	}
+        if($multipleGroupManagement && count(array_intersect($adminGroups, $group)) > 0) {
+            return true;
+        } elseif(!$multipleGroupManagement && in_array($group, $adminGroups)) {
+            return true;
+        }
 
-    	return false;
+        return false;
     }
 
     /**
      * Returns the request details (plugin, controller, prefix, action, params)
+     *
      * @return [array] return the request details in array
      */
-    public function requestDetails() {
-    	$request = $this->RequestHandler;
+    public function requestDetails()
+    {
+        $request = $this->RequestHandler;
 
-    	if(!empty($request->params)) {
-    		$request = $request->params;
-    	} else {
-	    	$request = $request->request->params;
-    	}
+        if(!empty($request->params)) {
+            $request = $request->params;
+        } else {
+            $request = $request->request->params;
+        }
 
-		// handle params
-    	$controller = $request['controller'];
-    	$action = $request['action'];
-    	$params = !empty($request['pass']) ? $request['pass'] : '';
-    	$plugin = !empty($request['plugin']) ? $request['plugin'] : '';
-    	$prefix = !empty($request['prefix']) ? $request['prefix'] : '';
+        // handle params
+        $controller = $request['controller'];
+        $action = $request['action'];
+        $params = !empty($request['pass']) ? $request['pass'] : '';
+        $plugin = !empty($request['plugin']) ? $request['plugin'] : '';
+        $prefix = !empty($request['prefix']) ? $request['prefix'] : '';
 
-   		$requestInfo = [
-   			'plugin' => !empty($plugin) ? $plugin : false,
-   			'prefix' => !empty($prefix) ? $prefix : false,
-   			'controller' => $controller . 'Controller',
-   			'action' => preg_replace('/\\.[^.\\s]{3,4}$/', '', $action),
-   			'params' => $params,
-   		];
+        $requestInfo = [
+        'plugin' => !empty($plugin) ? $plugin : false,
+        'prefix' => !empty($prefix) ? $prefix : false,
+        'controller' => $controller . 'Controller',
+        'action' => preg_replace('/\\.[^.\\s]{3,4}$/', '', $action),
+        'params' => $params,
+        ];
 
-   		return $requestInfo;
+        return $requestInfo;
     }
 }

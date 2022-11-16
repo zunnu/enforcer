@@ -25,7 +25,7 @@ class EnforcerGroupsTable extends Table
     /**
      * Initialize method
      *
-     * @param array $config The configuration for the Table.
+     * @param  array $config The configuration for the Table.
      * @return void
      */
     public function initialize(array $config)
@@ -38,26 +38,32 @@ class EnforcerGroupsTable extends Table
 
         $this->addBehavior('Timestamp');
 
-        $this->hasMany('Permissions', [
+        $this->hasMany(
+            'Permissions', [
             'foreignKey' => 'group_id',
             'className' => 'Enforcer.EnforcerGroupPermissions',
             'propertyName' => 'Permissions'
-        ]);
+            ]
+        );
 
-        $this->hasMany('UsersGroups', [
+        $this->hasMany(
+            'UsersGroups', [
             'foreignKey' => 'group_id',
             'className' => 'Enforcer.EnforcerUsersGroups',
-        ]);
+            ]
+        );
 
-        $this->hasMany('Users', [
+        $this->hasMany(
+            'Users', [
             'foreignKey' => 'group_id'
-        ]);
+            ]
+        );
     }
 
     /**
      * Default validation rules.
      *
-     * @param \Cake\Validation\Validator $validator Validator instance.
+     * @param  \Cake\Validation\Validator $validator Validator instance.
      * @return \Cake\Validation\Validator
      */
     public function validationDefault(Validator $validator)

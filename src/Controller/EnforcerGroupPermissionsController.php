@@ -14,7 +14,8 @@ use Enforcer\PermissionManager;
  */
 class EnforcerGroupPermissionsController extends AppController
 {
-    public function permissions() {
+    public function permissions()
+    {
         $permissionManager = new PermissionManager();
         $groupsList = $this->EnforcerGroupPermissions->Groups->find('all')->toArray();
 
@@ -29,9 +30,11 @@ class EnforcerGroupPermissionsController extends AppController
                                 // if the entireController is true set this to true to set the same permission to all the actions
                                 $setAll = false;
                                 foreach ($actions as $actionName => $value) {
-                                    $group = $this->EnforcerGroupPermissions->Groups->find('all')->where([
+                                    $group = $this->EnforcerGroupPermissions->Groups->find('all')->where(
+                                        [
                                         'name' => $groupName
-                                    ])->first();
+                                        ]
+                                    )->first();
 
                                     if($group) {
                                         // if the Controller word is not present
@@ -48,14 +51,16 @@ class EnforcerGroupPermissionsController extends AppController
                                             $value = 'all';
                                         }
 
-                                        $permission = $this->EnforcerGroupPermissions->find('all')->where([
+                                        $permission = $this->EnforcerGroupPermissions->find('all')->where(
+                                            [
                                             'user_id' => 0,
                                             'group_id' => $group->id,
                                             'plugin' => $pluginName == 'App' ? '' : $pluginName,  
                                             'prefix' => $prefix == 'App' ? '' : $prefix,
                                             'controller' => $controllerName,
                                             'action' => $actionName,
-                                        ])->first();
+                                            ]
+                                        )->first();
 
                                         if(!$permission) {
                                             $permission = $this->EnforcerGroupPermissions->newEntity();
