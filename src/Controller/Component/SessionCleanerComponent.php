@@ -24,7 +24,8 @@ class SessionCleanerComponent extends Component
         'fileDeleteTime' => 30,
     ];
 
-    public function initialize(array $config) {
+    public function initialize(array $config)
+    {
         if(empty($config['sessionPath'])) {
             $config['sessionPath'] = $this->_defaultConfig['sessionPath'];
         }
@@ -40,11 +41,13 @@ class SessionCleanerComponent extends Component
         $this->EnforcerConfig = $config;
 
         if(!Cache::config('enforcer_session_clean')) {
-            Cache::config('enforcer_session_clean', [
+            Cache::config(
+                'enforcer_session_clean', [
                 'className' => 'Cake\Cache\Engine\FileEngine',
                 'duration' => '+50 year',
                 'path' => CACHE . 'enforcer' . DS,
-            ]);
+                ]
+            );
 
             if(!Cache::read('last_session_clean_time', 'enforcer_session_clean')) {
                 Cache::write('last_session_clean_time', time(), 'enforcer_session_clean');
@@ -54,9 +57,11 @@ class SessionCleanerComponent extends Component
 
     /**
      * Check if the session files need to be cleaned
+     *
      * @return boolean
      */
-    public function check() {
+    public function check()
+    {
         if(!empty(Configure::read('Session.defaults')) && strtolower(Configure::read('Session.defaults')) != 'cake') {
             return false;
         }
@@ -79,9 +84,11 @@ class SessionCleanerComponent extends Component
 
     /**
      * Clean the session files that are no longer needed
+     *
      * @return boolean
      */
-    private function clean() {
+    private function clean()
+    {
         // get all session files
         $files = glob($this->EnforcerConfig['sessionPath'] . "*");
         $time = new \DateTime();

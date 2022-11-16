@@ -13,7 +13,8 @@ use Cake\Core\App;
 use Cake\Core\Plugin;
 use Cake\Cache\Cache;
 
-class PermissionManager {
+class PermissionManager
+{
     // prefixes
     protected $prefixes = [];
 
@@ -23,17 +24,20 @@ class PermissionManager {
     protected $controllerTree = [];
 
     // multiple = groupManagement either single or multiple
-    public function __construct($multiple = false) {
+    public function __construct($multiple = false)
+    {
         $this->multipleGroupManagement = $multiple;
 
         // this is not the right place to use this
         // TODO: move this later
         if(!Cache::config('Enforcer')) {
-            Cache::config('Enforcer', [
+            Cache::config(
+                'Enforcer', [
                 'className' => 'Cake\Cache\Engine\FileEngine',
                 'duration' => '+100 week',
                 'path' => CACHE . 'enforcer' . DS,
-            ]);
+                ]
+            );
         }
 
         // the names of the funtions that will be skipped
@@ -48,7 +52,8 @@ class PermissionManager {
         $this->Groups = TableRegistry::get('EnforcerGroups');
     }
 
-    public function checkAccess($requestInfo, $groupID) {
+    public function checkAccess($requestInfo, $groupID)
+    {
         // if the group id is 1 and the action is for this plugin we will allow the user in
         if(!is_array($groupID) && $groupID == 1 && strtolower($requestInfo['plugin']) == 'enforcer') {
             return true;
@@ -66,17 +71,21 @@ class PermissionManager {
                 $permissions = array_merge($permissions, $this->getGroupPermissions($group));
             }
 
-            usort($permissions, function ($permission1, $permission2) {
-                return $permission2['allowed'] <=> $permission1['allowed'];
-            });
+            usort(
+                $permissions, function ($permission1, $permission2) {
+                    return $permission2['allowed'] <=> $permission1['allowed'];
+                }
+            );
         }
 
         foreach ($permissions as $key => $permission) {
             if(!$permission['allowed']) {
-                if ($this->hasAccess($permission, $requestInfo)) return false;
+                if ($this->hasAccess($permission, $requestInfo)) { return false;
+                }
                 // Log::info([$permission, $this->hasAccess($permission, $requestInfo)]);
             } elseif($permission['allowed']) {
-                if ($this->hasAccess($permission, $requestInfo)) return true;
+                if ($this->hasAccess($permission, $requestInfo)) { return true;
+                }
                 // dd($this->hasAccess($permission, $requestInfo));
             }
         }
@@ -84,7 +93,8 @@ class PermissionManager {
         return false;
     }
 
-    private function hasAccess($perm, $requestInfo) {
+    private function hasAccess($perm, $requestInfo)
+    {
         return (
             ($perm['plugin'] == '*' || $perm['plugin'] == $requestInfo['plugin']) &&
             ($perm['prefix'] == '*' || strtolower($perm['prefix']) == strtolower($requestInfo['prefix'])) &&
@@ -97,11 +107,13 @@ class PermissionManager {
         
     // }
 
-    public function setRoutes() {
+    public function setRoutes()
+    {
         $this->routes = Router::routes();
     }
 
-    public function getPermissions($prefix = 'admin') {
+    public function getPermissions($prefix = 'admin')
+    {
         $this->setRoutes();
         $this->buildPrefixes();
         $this->handleApp();
@@ -116,16 +128,19 @@ class PermissionManager {
         return $this->controllerTree;
     }
 
-    private function buildPrefixes() {
+    private function buildPrefixes()
+    {
         $routes = $this->routes;
 
         foreach ($routes as $key => $route) {
             if (isset($route->defaults['prefix'])) {
                 $prefixes = explode('/', $route->defaults['prefix']);
-                $prefix = implode('/', array_map(
-                    'Cake\\Utility\\Inflector::camelize',
-                    $prefixes
-                ));
+                $prefix = implode(
+                    '/', array_map(
+                        'Cake\\Utility\\Inflector::camelize',
+                        $prefixes
+                    )
+                );
                 if (!isset($route->defaults['plugin'])) {
                     $this->prefixes['App'][$prefix] = true;
                 } else {
@@ -136,7 +151,8 @@ class PermissionManager {
     }
 
     // add app routings to the controller tree
-    private function handleApp() {
+    private function handleApp()
+    {
         $holder['App'] = $this->getControllers();
 
         if(!empty($this->prefixes['App'])) {
@@ -150,7 +166,8 @@ class PermissionManager {
     }
 
     // add plugin controllers to controller tree
-    private function handlePlugins($plugins) {
+    private function handlePlugins($plugins)
+    {
         foreach ($plugins as $key => $plugin) {
             $holder = [];
             $hasPrefix = false;
@@ -168,7 +185,8 @@ class PermissionManager {
     }
 
     // return the path to the controller dir
-    private function getPath($plugin, $prefix) {
+    private function getPath($plugin, $prefix)
+    {
         if (!$plugin) {
             $path = App::path('Controller' . (empty($prefix) ? '' : DS . Inflector::camelize($prefix)));
         } else {
@@ -178,7 +196,8 @@ class PermissionManager {
         return $path;
     }
 
-    private function getControllers($plugin = null, $prefix = null) {
+    private function getControllers($plugin = null, $prefix = null)
+    {
         // find the controllers
         $path = $this->getPath($plugin, $prefix);
         $dir = new Folder($path[0]);
@@ -193,7 +212,8 @@ class PermissionManager {
     }
 
     // add methods to the controller tree
-    private function getMethods($plugin = null, $controllersTree) {
+    private function getMethods($plugin = null, $controllersTree)
+    {
         $controllersWithMethods = [];
 
         foreach ($controllersTree as $key => $controllers) {
@@ -249,7 +269,8 @@ class PermissionManager {
     }
 
     // add existing permissions to controller tree
-    private function buildPermissions() {
+    private function buildPermissions()
+    {
         $groups = $this->Groups->find('all')->toArray();
         $groups = array_column($groups, 'name', 'id');
         $permissionsList = [];
@@ -272,12 +293,14 @@ class PermissionManager {
                         $pluginName = $plugin;
                     }
  
-                    $permissions = $this->Permissions->find('all')->where([
+                    $permissions = $this->Permissions->find('all')->where(
+                        [
                         'plugin' => $pluginName,
                         'prefix' => $prefixName,
                         'controller' => $controllerName . 'Controller',
                         'action IN' => $methods,
-                    ])->toArray();
+                        ]
+                    )->toArray();
 
                     // prefix query
                     // if($prefix !== 'App') {
@@ -342,11 +365,12 @@ class PermissionManager {
     /**
      * Returns an array of permissions for the $userGroupID, it includes the Guest group if $includeGuestPermission
      *
-     * @param $userGroupID
-     * @param $includeGuestPermission
+     * @param  $userGroupID
+     * @param  $includeGuestPermission
      * @return array of permissions.
      */
-    public function getGroupPermissions($userGroupID = 3, $includeGuestPermission = false) {
+    public function getGroupPermissions($userGroupID = 3, $includeGuestPermission = false)
+    {
 
         // using the cake cache to store rules
         $cacheKey = 'permissions_for_group_'.$userGroupID.'_'.$includeGuestPermission;
@@ -369,11 +393,13 @@ class PermissionManager {
             }
 
             // sort to denials first, they are stronger than allows
-            $actionsQuery = $this->Permissions->find('all')->where($conditions)->order([
+            $actionsQuery = $this->Permissions->find('all')->where($conditions)->order(
+                [
                 'allowed' => 'ASC',
                 'controller' => 'ASC',
                 'action' => 'ASC',
-            ])->toArray();
+                ]
+            )->toArray();
 
             $actions = [];
 
@@ -393,7 +419,8 @@ class PermissionManager {
         return $actions;
     }
 
-    public function refreshCaches() {
+    public function refreshCaches()
+    {
         $groups = $this->Groups->find('all')->toArray();
 
         foreach ($groups as $key => $group) {

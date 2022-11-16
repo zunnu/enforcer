@@ -7,15 +7,18 @@ use Cake\Event\Event;
 
 class AppController extends BaseController
 {
-    public function initialize() {
+    public function initialize()
+    {
         parent::initialize();
     }
 
-	public function beforeRender(Event $event) {
-	    parent::beforeRender($event);
-	}
+    public function beforeRender(Event $event)
+    {
+        parent::beforeRender($event);
+    }
 
-    public function beforeFilter(Event $event) {
+    public function beforeFilter(Event $event)
+    {
         parent::beforeFilter($event);
         $this->viewBuilder()->setLayout('enforce');
     }

@@ -48,7 +48,7 @@ class EnforcerGroupsController extends AppController
     /**
      * Edit method
      *
-     * @param string|null $id Enforcer Group id.
+     * @param  string|null $id Enforcer Group id.
      * @return \Cake\Http\Response|null Redirects on successful edit, renders view otherwise.
      * @throws \Cake\Datasource\Exception\RecordNotFoundException When record not found.
      */
@@ -59,9 +59,11 @@ class EnforcerGroupsController extends AppController
             return $this->redirect(['action' => 'index']);
         }
 
-        $group = $this->EnforcerGroups->get($id, [
+        $group = $this->EnforcerGroups->get(
+            $id, [
             'contain' => [],
-        ]);
+            ]
+        );
 
         if ($this->request->is(['patch', 'post', 'put'])) {
             $group = $this->EnforcerGroups->patchEntity($group, $this->request->getData());
@@ -78,7 +80,7 @@ class EnforcerGroupsController extends AppController
     /**
      * Delete method
      *
-     * @param string|null $id Enforcer Group id.
+     * @param  string|null $id Enforcer Group id.
      * @return \Cake\Http\Response|null Redirects to index.
      * @throws \Cake\Datasource\Exception\RecordNotFoundException When record not found.
      */
@@ -103,13 +105,16 @@ class EnforcerGroupsController extends AppController
         return $this->redirect(['action' => 'index']);
     }
 
-    private function clearAdminStatusCache() {
+    private function clearAdminStatusCache()
+    {
         if(!Cache::config('enforcer_admin_groups')) {
-            Cache::config('enforcer_admin_groups', [
+            Cache::config(
+                'enforcer_admin_groups', [
                 'className' => 'Cake\Cache\Engine\FileEngine',
                 'duration' => '+1 week',
                 'path' => CACHE . 'enforcer' . DS,
-            ]);
+                ]
+            );
         }
 
         Cache::delete('enforcer_admin_groups', 'enforcer_admin_groups');
